@@ -269,7 +269,7 @@ int main(int argc, char** argv) {
     CUDA_CHECK(cudaStreamCreate(&stream));
 
     int fcount = 0;
-    for (int f = 0; f < (int)file_names.size(); f++) {
+    for (int f = 0; f < std::min((int)file_names.size(), BATCH_SIZE); f++) {
         fcount++;
         if (fcount < BATCH_SIZE && f + 1 != (int)file_names.size()) continue;
         for (int b = 0; b < fcount; b++) {
@@ -290,10 +290,12 @@ int main(int argc, char** argv) {
         }
 
         // Warmup
+        std::cout << "Warming up.." << std::endl;
         for(int i=0; i<100; i++)
             doInference(*context, stream, buffers, data, prob, BATCH_SIZE);
 
         // Run inference
+        std::cout << "Running.." << std::endl;
         for(int i=0; i<200; i++) {
             auto start = std::chrono::system_clock::now();
             doInference(*context, stream, buffers, data, prob, BATCH_SIZE);
@@ -306,7 +308,7 @@ int main(int argc, char** argv) {
 
             float ms_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
             timings.push_back(ms_time);
-            std::cout << ms_time << "ms" << std::endl;
+            //std::cout << ms_time << "ms" << std::endl;
         }
 #if 0
         for (int b = 0; b < fcount; b++) {
