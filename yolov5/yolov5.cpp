@@ -306,7 +306,7 @@ int main(int argc, char** argv) {
             }
             auto end = std::chrono::system_clock::now();
 
-            float ms_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+            float ms_time = (std::chrono::duration_cast<std::chrono::microseconds>(end - start).count())/1000.f;
             timings.push_back(ms_time);
             //std::cout << ms_time << "ms" << std::endl;
         }
