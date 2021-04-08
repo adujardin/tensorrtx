@@ -14,8 +14,10 @@ mkdir build; cd build; cmake .. > /dev/null 2>&1; make -j > /dev/null 2>&1; cd .
 
 for variant in "${yolov5_variants[@]}"; do
     # Get WTS file
+    echo "Downlading yolov5${variant} weights"
     wget -nc -q "https://stereolabs.sfo2.cdn.digitaloceanspaces.com/ai/model/others/yolov5${variant}_v4.0.wts"
     for size in "${image_sizes[@]}"; do
+        echo "Generating yolov5${variant} engine at ${size}"
         # Set size
         set_network_size ${size} ${size}
         # Compile
@@ -24,6 +26,7 @@ for variant in "${yolov5_variants[@]}"; do
         engine_name="./yolov5${variant}_${size}_fp16_v4.0.engine"
         build/yolov5 -s "./yolov5${variant}_v4.0.wts" ${engine_name} ${variant}
         # Run engine
+        echo "Generation done, running yolov5${variant} engine at ${size}"
         build/yolov5 -d ${engine_name} ./samples
     done 
 done
