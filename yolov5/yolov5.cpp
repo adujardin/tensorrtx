@@ -239,6 +239,8 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    std::vector<float> timings;
+
     // prepare input data ---------------------------
     static float data[BATCH_SIZE * 3 * INPUT_H * INPUT_W];
     //for (int i = 0; i < 3 * INPUT_H * INPUT_W; i++)
@@ -290,13 +292,18 @@ int main(int argc, char** argv) {
         // Run inference
         auto start = std::chrono::system_clock::now();
         doInference(*context, stream, buffers, data, prob, BATCH_SIZE);
-        auto end = std::chrono::system_clock::now();
-        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
         std::vector<std::vector<Yolo::Detection>> batch_res(fcount);
         for (int b = 0; b < fcount; b++) {
             auto& res = batch_res[b];
             nms(res, &prob[b * OUTPUT_SIZE], CONF_THRESH, NMS_THRESH);
         }
+        auto end = std::chrono::system_clock::now();
+
+        float ms_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+        timings.push_back(ms_time);
+        std::cout << ms_time << "ms" << std::endl;
+       
+#if 0
         for (int b = 0; b < fcount; b++) {
             auto& res = batch_res[b];
             //std::cout << res.size() << std::endl;
@@ -308,8 +315,16 @@ int main(int argc, char** argv) {
             }
             cv::imwrite("_" + file_names[f - fcount + 1 + b], img);
         }
+#endif
         fcount = 0;
     }
+
+    //https://stackoverflow.com/a/42791986/7036639
+    const auto median_it = timings.begin() + timings.size() / 2;
+    std::nth_element(timings.begin(), median_it , timings.end());
+    auto median = *median_it;
+
+    std::cout << engine_name << " median " << median << " ms"<< std::endl;
 
     // Release stream and buffers
     cudaStreamDestroy(stream);
