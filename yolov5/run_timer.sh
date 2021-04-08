@@ -24,6 +24,6 @@ for variant in "${yolov5_variants[@]}"; do
         engine_name="./yolov5${variant}_${size}_fp16_v4.0.engine"
         build/yolov5 -s "./yolov5${variant}_v4.0.wts" ${engine_name} ${variant}
         # Run engine
-        build/yolov5 -d ${engine_name} ${variant}
+        build/yolov5 -d ${engine_name} ${variant} ./samples
     done 
 done

@@ -289,20 +289,25 @@ int main(int argc, char** argv) {
             }
         }
 
-        // Run inference
-        auto start = std::chrono::system_clock::now();
-        doInference(*context, stream, buffers, data, prob, BATCH_SIZE);
-        std::vector<std::vector<Yolo::Detection>> batch_res(fcount);
-        for (int b = 0; b < fcount; b++) {
-            auto& res = batch_res[b];
-            nms(res, &prob[b * OUTPUT_SIZE], CONF_THRESH, NMS_THRESH);
-        }
-        auto end = std::chrono::system_clock::now();
+        // Warmup
+        for(int i=0; i<100; i++)
+            doInference(*context, stream, buffers, data, prob, BATCH_SIZE);
 
-        float ms_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-        timings.push_back(ms_time);
-        std::cout << ms_time << "ms" << std::endl;
-       
+        // Run inference
+        for(int i=0; i<200; i++) {
+            auto start = std::chrono::system_clock::now();
+            doInference(*context, stream, buffers, data, prob, BATCH_SIZE);
+            std::vector<std::vector<Yolo::Detection>> batch_res(fcount);
+            for (int b = 0; b < fcount; b++) {
+                auto& res = batch_res[b];
+                nms(res, &prob[b * OUTPUT_SIZE], CONF_THRESH, NMS_THRESH);
+            }
+            auto end = std::chrono::system_clock::now();
+
+            float ms_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+            timings.push_back(ms_time);
+            std::cout << ms_time << "ms" << std::endl;
+        }
 #if 0
         for (int b = 0; b < fcount; b++) {
             auto& res = batch_res[b];
